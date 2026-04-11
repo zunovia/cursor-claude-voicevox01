@@ -3,19 +3,22 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "node .claude/hooks/ensure-voicevox.js"
+        "command": "node .claude/hooks/ensure-voicevox.js",
+        "timeout": 35
       }
     ],
     "Stop": [
       {
         "type": "command",
-        "command": "node .claude/hooks/tts-stop.js"
+        "command": "node .claude/hooks/tts-stop.js",
+        "timeout": 120
       }
     ],
     "SubagentStop": [
       {
         "type": "command",
-        "command": "node .claude/hooks/tts-kill.js"
+        "command": "node .claude/hooks/tts-kill.js",
+        "timeout": 5
       }
     ]
   }
