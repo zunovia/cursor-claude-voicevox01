@@ -1,0 +1,22 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "node .claude/hooks/ensure-voicevox.js"
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node .claude/hooks/tts-stop.js"
+      }
+    ],
+    "SubagentStop": [
+      {
+        "type": "command",
+        "command": "node .claude/hooks/tts-kill.js"
+      }
+    ]
+  }
+}
