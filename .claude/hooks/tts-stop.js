@@ -8,12 +8,17 @@ const { spawn } = require("child_process");
 
 const VOICEVOX = "http://127.0.0.1:50021";
 const PID_FILE = path.join(os.tmpdir(), "claude-tts-pid.txt");
-const CONFIG_PATH = path.join(process.cwd(), "voicevox-config.json");
+const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
+const CONFIG_PATH = path.join(PROJECT_ROOT, "voicevox-config.json");
 
+const EXAMPLE_PATH = path.join(PROJECT_ROOT, "voicevox-config.example.json");
 const DEFAULTS = { speaker: 14, speedScale: 1.0, maxChars: 500 };
 
 function loadConfig() {
   try {
+    if (!fs.existsSync(CONFIG_PATH) && fs.existsSync(EXAMPLE_PATH)) {
+      fs.copyFileSync(EXAMPLE_PATH, CONFIG_PATH);
+    }
     const raw = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
     return { ...DEFAULTS, ...raw };
   } catch {

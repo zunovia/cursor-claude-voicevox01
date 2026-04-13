@@ -48,8 +48,9 @@ QUERY=$(curl -s -X POST "http://127.0.0.1:50021/audio_query?text=<テキスト>&
 # speedScale注入
 QUERY=$(echo "$QUERY" | node -e "const c=[];process.stdin.on('data',d=>c.push(d));process.stdin.on('end',()=>{const q=JSON.parse(Buffer.concat(c));q.speedScale=<SPEED>;console.log(JSON.stringify(q))})")
 # synthesis & play
-curl -s -X POST -H "Content-Type: application/json" -d "$QUERY" "http://127.0.0.1:50021/synthesis?speaker=<SPEAKER_ID>" -o "$TMPDIR/claude-tts-test.wav"
-powershell -Command "(New-Object Media.SoundPlayer '$TMPDIR/claude-tts-test.wav').PlaySync()"
+WAV_PATH="$(node -e "console.log(require('os').tmpdir())")/claude-tts-test.wav"
+curl -s -X POST -H "Content-Type: application/json" -d "$QUERY" "http://127.0.0.1:50021/synthesis?speaker=<SPEAKER_ID>" -o "$WAV_PATH"
+powershell -Command "(New-Object Media.SoundPlayer '$WAV_PATH').PlaySync()"
 ```
 
 ## Notes

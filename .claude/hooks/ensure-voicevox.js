@@ -5,10 +5,15 @@ const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 
-const CONFIG_PATH = path.join(process.cwd(), "voicevox-config.json");
+const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
+const CONFIG_PATH = path.join(PROJECT_ROOT, "voicevox-config.json");
+const EXAMPLE_PATH = path.join(PROJECT_ROOT, "voicevox-config.example.json");
 
 function loadConfig() {
   try {
+    if (!fs.existsSync(CONFIG_PATH) && fs.existsSync(EXAMPLE_PATH)) {
+      fs.copyFileSync(EXAMPLE_PATH, CONFIG_PATH);
+    }
     return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
   } catch {
     return {};
