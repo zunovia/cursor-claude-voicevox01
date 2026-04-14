@@ -41,16 +41,46 @@ VOICEVOX音声合成の設定を管理するスキルです。
 
 ### `/tts test <テキスト>`
 1. `voicevox-config.json` から設定を読み込む
-2. 以下のコマンドで音声合成・再生:
+2. 以下の Node.js スクリプトで音声合成・再生（Windows 互換）:
+```javascript
+// このコードブロックは説明用です。実際には下記の node コマンドを実行してください。
+// audio_query → speedScale 注入 → synthesis → PowerShell 再生 を一括処理します。
+```
 ```bash
-# audio_query取得
-QUERY=$(curl -s -X POST "http://127.0.0.1:50021/audio_query?text=<テキスト>&speaker=<SPEAKER_ID>")
-# speedScale注入
-QUERY=$(echo "$QUERY" | node -e "const c=[];process.stdin.on('data',d=>c.push(d));process.stdin.on('end',()=>{const q=JSON.parse(Buffer.concat(c));q.speedScale=<SPEED>;console.log(JSON.stringify(q))})")
-# synthesis & play
-WAV_PATH="$(node -e "console.log(require('os').tmpdir())")/claude-tts-test.wav"
-curl -s -X POST -H "Content-Type: application/json" -d "$QUERY" "http://127.0.0.1:50021/synthesis?speaker=<SPEAKER_ID>" -o "$WAV_PATH"
-powershell -Command "(New-Object Media.SoundPlayer '$WAV_PATH').PlaySync()"
+node -e '
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+const { spawn } = require("child_process");
+const config = JSON.parse(fs.readFileSync(path.join(process.cwd(), "voicevox-config.json"), "utf8"));
+const speaker = config.speaker || 14;
+const speedScale = config.speedScale || 1.0;
+const text = "<テキスト>";
+const base = "http://127.0.0.1:50021";
+function req(url, opts) {
+  return new Promise((res, rej) => {
+    const r = http.request(url, opts || {}, (resp) => {
+      const c = [];
+      resp.on("data", d => c.push(d));
+      resp.on("end", () => res({ status: resp.statusCode, body: Buffer.concat(c) }));
+    });
+    r.on("error", rej);
+    if (opts && opts.body) r.write(opts.body);
+    r.end();
+  });
+}
+(async () => {
+  const q = await req(base + "/audio_query?text=" + encodeURIComponent(text) + "&speaker=" + speaker, { method: "POST" });
+  const query = JSON.parse(q.body.toString());
+  query.speedScale = speedScale;
+  const s = await req(base + "/synthesis?speaker=" + speaker, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(query) });
+  const wav = path.join(os.tmpdir(), "claude-tts-test.wav");
+  fs.writeFileSync(wav, s.body);
+  const child = spawn("powershell", ["-Command", "(New-Object Media.SoundPlayer " + JSON.stringify(wav) + ").PlaySync()"]);
+  child.on("close", () => process.exit(0));
+})().catch(e => { console.error(e.message); process.exit(1); });
+'
 ```
 
 ## Notes

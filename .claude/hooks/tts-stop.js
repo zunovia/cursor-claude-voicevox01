@@ -103,7 +103,17 @@ async function speak(text, config) {
 
   // Step 1: audio_query
   const qUrl = `${VOICEVOX}/audio_query?text=${encodeURIComponent(clean)}&speaker=${config.speaker}`;
-  const q = await request(qUrl, { method: "POST" });
+  let q;
+  try {
+    q = await request(qUrl, { method: "POST" });
+  } catch {
+    console.error(
+      "[VOICEVOX] エンジンに接続できませんでした（http://127.0.0.1:50021）。\n" +
+        "  VOICEVOX ENGINE が起動しているか確認してください。\n" +
+        "  Cursor を再起動すると SessionStart hook がエンジンを自動起動します。"
+    );
+    return;
+  }
   if (q.status !== 200) return;
 
   // Step 2: Inject speedScale into query
@@ -158,6 +168,16 @@ async function main() {
   if (!text) process.exit(0);
 
   const config = loadConfig();
+
+  if (!config.enginePath) {
+    console.error(
+      "[VOICEVOX] enginePath が未設定のため音声再生をスキップしました。\n" +
+        "  設定方法: Claude Code で `/tts engine <run.exeのフルパス>` を実行してください。\n" +
+        "  例: /tts engine C:/Users/yourname/voicevox-engine/run.exe"
+    );
+    process.exit(0);
+  }
+
   await speak(text, config);
 }
 

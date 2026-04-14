@@ -44,14 +44,20 @@ async function main() {
 
   if (!enginePath) {
     console.error(
-      "[VOICEVOX] enginePath not set in voicevox-config.json. " +
-        "Please set the path to your VOICEVOX run.exe"
+      "[VOICEVOX] enginePath が voicevox-config.json に設定されていません。\n" +
+        "  設定方法: Claude Code で `/tts engine <run.exeのフルパス>` を実行するか、\n" +
+        "  voicevox-config.json の enginePath に VOICEVOX の run.exe のパスを直接記入してください。\n" +
+        "  例: \"enginePath\": \"C:/Users/yourname/voicevox/vv-engine/run.exe\""
     );
     process.exit(0);
   }
 
   if (!fs.existsSync(enginePath)) {
-    console.error(`[VOICEVOX] Engine not found at: ${enginePath}`);
+    console.error(
+      `[VOICEVOX] エンジンが見つかりません: ${enginePath}\n` +
+        "  voicevox-config.json の enginePath を確認してください。\n" +
+        "  VOICEVOX ENGINE が正しい場所に展開されているか確認してください。"
+    );
     process.exit(0);
   }
 
